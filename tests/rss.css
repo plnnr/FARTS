@@ -1,0 +1,63 @@
+@import url(https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css);
+
+* {
+    box-sizing: border-box;
+}
+
+.top-bar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+header {
+    display: flex;
+    padding: 1rem;
+    background-color: aquamarine;
+}
+
+.logo {
+    width: 250px;
+    background-color: salmon;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+nav ul {
+    display: flex;
+    margin: 0;
+    list-style: none;
+    padding: 0;
+}
+
+nav li {
+    margin-right: 1rem;
+}
+
+.section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 2rem;
+}
+
+.step-1 {
+    background-color: yellow;
+}
+
+.step-2 {
+    background-color: rgb(143, 16, 105);
+}
+
+.step-3 {
+    background-color: indianred;
+}
+
+.section h1 {
+    margin: 0;
+}
