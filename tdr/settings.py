@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'accounts',
     'sites',
+    'active_link',
 ]
 
 MIDDLEWARE = [
@@ -138,3 +139,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+#
+# Django Authentication
+#
+LOGIN_REDIRECT_URL = '/accounts/dashboard'
+LOGOUT_REDIRECT_URL = '/'

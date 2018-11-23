@@ -1,0 +1,25 @@
+{% load active_link_tags %}
+{% load static %}  
+
+<header>
+    <div id="logo"><img src="{% static 'sites/images/farts_logo_dark_h.png'%}" /></div>
+        
+    <nav>
+        <ul>
+            <li class="{% active_link 'home' %}"><a href="{% url 'home' %}">Home</a></li>
+            <li class="{% active_link 'sites:register-sending' %}"><a href="{% url 'sites:register-sending' %}">Sell FAR</a></li>
+            <li class="{% active_link 'sites:register-receiving' %}"><a href="{% url 'sites:register-receiving' %}">Buy FAR</a></li>
+        </ul>
+        <ul>
+            <li class="{% active_link 'about' %}"><a href="{% url 'about' %}">About</a></li>
+            <li class="{% active_link 'rules' %}"><a href="{% url 'rules' %}">Rules</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'accounts:logout' %}">Log Out</a></li>
+            {% else %}
+                <li><a href="{% url 'accounts:login' %}">Log In</a></li>
+                <li><a href="#">Sign Up</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+</header>

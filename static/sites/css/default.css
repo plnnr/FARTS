@@ -13,6 +13,11 @@ body {
     font-family: 'Open Sans';
 }
 
+#logo img {
+    width: 330px;
+    margin-right: 20px;
+}
+
 .top-bar {
     position: sticky;
     top: 0;

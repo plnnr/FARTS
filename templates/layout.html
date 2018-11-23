@@ -1,0 +1,34 @@
+{% load static %}  {# Only load static once at the top of your file #}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
+    <link href="{% static "sites/css/default.css"%}" rel='stylesheet' />
+    <title>{% block title %}{% endblock title %}</title>
+</head>
+
+<body>
+    <div class="top-bar">
+        {% include 'navbar.html' %}
+        <div>
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="content">
+        {% block content %}
+        {% endblock content %}
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
+    <script src="{% static 'sites/js/default.js'%}"></script>
+
+</body>
+
+</html>

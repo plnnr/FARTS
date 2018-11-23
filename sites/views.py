@@ -25,18 +25,38 @@ def test_geospatial(request):
     result = SendingSite.objects.filter(
         location__distance_lte=(point, D(mi=2))
     )
-    import pdb
-    pdb.set_trace()
+    import pdb; pdb.set_trace()
 
 
-def default_map(request):
+def sending_site(request):
     # specify path to template here
     # TODO: move this token to Django settings from an environment variable
     # found in the Mapbox account settings and getting started instructions
     # see https://www.mapbox.com/account/ under the "Access tokens" section
     mapbox_access_token = 'pk.eyJ1IjoibmtvYmVsIiwiYSI6ImNqbzF4M3Q4ODBnZHoza254dWplOGk5ZnAifQ.TKDCR6nbv268FBi68MSbiA'
     context = {'mapbox_access_token': mapbox_access_token}
-    return render(request, 'sites/default.html', context)
+    return render(request, 'sites/register-sending.html', context)
+
+def receiving_site(request):
+        # specify path to template here
+    # TODO: move this token to Django settings from an environment variable
+    # found in the Mapbox account settings and getting started instructions
+    # see https://www.mapbox.com/account/ under the "Access tokens" section
+    mapbox_access_token = 'pk.eyJ1IjoibmtvYmVsIiwiYSI6ImNqbzF4M3Q4ODBnZHoza254dWplOGk5ZnAifQ.TKDCR6nbv268FBi68MSbiA'
+    context = {'mapbox_access_token': mapbox_access_token}
+    return render(request, 'sites/register-receiving.html', context)
+
+def home(request):
+    context = {}
+    return render(request, 'home.html', context)
+
+def about(request):
+    context = {}
+    return render(request, 'about.html', context)
+
+def rules(request):
+    context = {}
+    return render(request, 'rules.html', context)
 
 
 # to see all fiels, do `dir(object.object)` for example
