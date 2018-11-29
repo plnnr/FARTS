@@ -1,11 +1,41 @@
 {% extends "accounts/layout.html" %}
+{% load static %} 
+
+{% block stylesheet %}
+<link href="{% static "sites/css/dashboard.css"%}" rel='stylesheet' />
+{% endblock stylesheet %}
 
 {% block content %}
-    <h1>This is your dashboard</h1>
-    {{ user.username }}
-    <ul>
-        <li>My sites | manage | add</li>
-        <li>My credits | Add new | cash out | manage</li>
-        <li>View and bid | list view | map view</li>
-    </ul>
+    <div class='section'>
+        <div id='dashboard'>
+            <img src="{% static 'sites/images/icons/user.svg'%}">
+            <h1>{{ user.username }}'s dashboard</h1>
+        </div>
+        <div>
+            <div class='dashboard-element'>
+                <h3>My sites</h3>
+                <div class='list'>
+                    <p><a href='#'>Manage sites</a></p>
+                    <p><a href="{% url 'sites:register-receiving' %}">Add receiving site</a></p>
+                    <p><a href="{% url 'sites:register-sending' %}">Add sending site</a></p>
+                </div>
+            </div>
+            <div class='dashboard-element'>
+                <h3>My bids</h3>
+                <div class='list'>
+                    <p><a href='#'>Manage bids</a></p>
+                    <p><a href='#'>View active bids</a></p>
+                    <p><a href='#'>View past bids</a></p>
+                </div>
+            </div>
+            <div class='dashboard-element'>
+                <h3>My auctions</h3>
+                <div class='list'>
+                    <p><a href='#'>Manage auctions</a></p>
+                    <p><a href='#'>View active auctions</a></p>
+                    <p><a href='#'>View past auctions</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}

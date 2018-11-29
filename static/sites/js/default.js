@@ -77,7 +77,7 @@ function renderSuggestions(data) {
                 zoom: 18,
             });
             $suggestions.html('');
-            $.get('/get_details?site_coords=' + `${selectedSiteCoords}`)
+            $.get('/sites/get_details?site_coords=' + `${selectedSiteCoords}`)
                 .done(function(data) {
                     //console.log(data);
                     renderTaxlotBorder(data);
@@ -212,7 +212,7 @@ $addressButton.on('click', function(event) {
             zoom: 18,
         });
         $suggestions.html('');
-        $.get('/get_details?site_coords=' + `${selectedSiteCoords}`)
+        $.get('/sites/get_details?site_coords=' + `${selectedSiteCoords}`)
             .done(function(data) {
                 //console.log(data);
                 renderTaxlotBorder(data);
@@ -223,7 +223,7 @@ let addressQueryData = {};
 
 $addressField.on('keydown', $.debounce(500, function(event) {
     const value = event.target.value; // same as $addressField.val()
-    $.get('/search?address_part=' + value)
+    $.get('/sites/search?address_part=' + value)
         .done(function(data) {
             //console.log(data);
             lat = data.candidates[0].attributes.lat;
@@ -242,7 +242,7 @@ $addressField.on('keydown', $.debounce(500, function(event) {
 
 // $coordSearchButton.on('click', function(event) {
 //     //const value = $addressField.val();
-//     $.get('/get_details?site_coords=' + `${selectedSiteCoords}`)
+//     $.get('/sites/get_details?site_coords=' + `${selectedSiteCoords}`)
 //         .done(function(data) {
 //             //console.log(data);
 //             renderTaxlotBorder(data);

@@ -22,7 +22,7 @@ def sign_up(request):
             # )
             login(request, user)
 
-            return redirect('/dashboard')
+            return redirect('accounts/dashboard')
     else:
         form = UserCreationForm()
     

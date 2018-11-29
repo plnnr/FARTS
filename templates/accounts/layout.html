@@ -9,22 +9,31 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
     <link href="{% static "sites/css/default.css"%}" rel='stylesheet' />
+    {% block stylesheet %}{% endblock stylesheet%}
+    <title>{% block title %}{% endblock title %}</title>
 </head>
+
 <body>
-    <nav>
-        {% if user.is_authenticated %}
-            <a href="{% url 'accounts:logout' %}">Log Out</a>
-        {% else %}
-            <a href="{% url 'accounts:login' %}">Log In</a>
-            <a href="{% url 'accounts:sign_up'%}">Sign Up</a>
-        {% endif %}
-    </nav>
+    <div class="top-bar">
+        {% include 'navbar.html' %}
+        <div>
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+
     <div class="content">
         {% block content %}
         {% endblock content %}
     </div>
 
+    <div class="footer">
+        {% include 'footer.html' %}
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
+    <script src="{% static 'sites/js/default.js'%}"></script>
+
 </body>
+
 </html>

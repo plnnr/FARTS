@@ -133,7 +133,9 @@ def address_search_ajax(request):
     alt_url_params = f"&alt_coords=1&api_key={pmap_server_api_key}&query={client_input}"
     alt_fetch_url = alt_base_url + alt_url_params
     
+    # import pdb; pdb.set_trace()
     response = requests.get(alt_fetch_url)
+    
     return JsonResponse(response.json())
 
 
