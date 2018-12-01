@@ -10,4 +10,5 @@ urlpatterns = [
     path('register/sending-site', views.sending_site, name="register-sending"),
     path('search', views.address_search_ajax, name='search'),
     path('get_details', views.get_landuse_details_ajax, name='get_details'),
+    path('register/receiving-site/record_receiving_site', views.record_receiving_site, name='record-receiving-site'),
 ]

@@ -1,6 +1,7 @@
 from django.contrib.gis.db import models as geomodels
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import JSONField
 
 # steps for clearing data from database:
 # delete migration files (if migrations are broken)
@@ -8,6 +9,65 @@ from django.contrib.auth.models import User
 # dm sqlflush | dm dbshell # this DESTROYS the tables themselves
 # open pgadmin and manually delete table if required
 
+cityhall = """{
+    "type": "Polygon",
+    "coordinates": [
+        [
+        [
+            -122.67877619078355,
+            45.51477893629183
+        ],
+        [
+            -122.67884560270724,
+            45.51465077686185
+        ],
+        [
+            -122.67921018576193,
+            45.514748371001176
+        ],
+        [
+            -122.67957476342676,
+            45.514845964341774
+        ],
+        [
+            -122.67950535779129,
+            45.5149741214388
+        ],
+        [
+            -122.6794359485625,
+            45.51510228076183
+        ],
+        [
+            -122.6793665411304,
+            45.51523043790462
+        ],
+        [
+            -122.67929713100335,
+            45.51535859727345
+        ],
+        [
+            -122.67893254255877,
+            45.51526100041557
+        ],
+        [
+            -122.67856795591081,
+            45.515163402759
+        ],
+        [
+            -122.67863736873282,
+            45.51503525427614
+        ],
+        [
+            -122.67870677975819,
+            45.5149070954299
+        ],
+        [
+            -122.67877619078355,
+            45.51477893629183
+        ]
+        ]
+    ]
+}"""
 
 class BaseZone(models.Model):
     name = models.CharField(max_length = 256, unique=True)
@@ -44,20 +104,22 @@ class Site(models.Model):
     class Meta:
         abstract = True # django passes over this model when making migrations unless it's inherited
 
-    # add information that is shared between sending AND receiving sites
     street_address = models.CharField(max_length = 256)
-    # multiple_adjacent_sites = models.BooleanField() # does the site have multiple adjacent sites listed together?
     site_size = models.FloatField() # in square feet
+    building_size = models.FloatField()
+    site_far = models.FloatField()
     location = geomodels.PointField() # exact XY coordinates
     fuzzy_location = geomodels.PointField() # Location to be displayed to anonymous users
-    
+    parcel_poly = geomodels.PolygonField(default = cityhall)
+    pmaps_object = JSONField()
+
     ## Begin zoning 
-    # base_zones = models.ManyToManyField(BaseZone, blank=True, related_name='sites')
-    # base_zone_classes = models.ManyToManyField(BaseZoneClass, blank=True, related_name='sites')
-    # districts = models.ManyToManyField(District, blank=True, related_name='sites')
     base_zones = models.ManyToManyField(BaseZone, blank=True)
     base_zone_classes = models.ManyToManyField(BaseZoneClass, blank=True)
     districts = models.ManyToManyField(District, blank=True)
+
+    def __str__(self):
+        return f'{self.id}: {self.street_address}'
 
  
 class SendingSite(Site):
@@ -65,16 +127,39 @@ class SendingSite(Site):
     transfer_purpose = models.IntegerField(choices = TRANSFER_PURPOSES) # Tree, housing, historic landmark
     transferrable_far = models.FloatField()
 
-    def __str__(self):
-        return f'{self.street_address}'
-
 class ReceivingSite(Site):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiving_sites")
     target_far = models.FloatField() # desired FAR to receive
+    
+
+
+
+
+
+DOCUMENT_PURPOSES = (
+    (0, "City Forester or arborist certification"),
+    (1, "PHB certification"),
+    (2, "Other certification"),
+    (3, "Other supporting document"),
+)
+
+class SupportingDocument(models.Model):
+    class Meta:
+        abstract = True # django passes over this model when making migrations unless it's inherited
+
+    document_purpose = models.IntegerField(choices = DOCUMENT_PURPOSES)
 
     def __str__(self):
-        return f'{self.street_address}'
-    
+        return f'[{self.id}] {self.document_purpose[1]} for {self.site}'
+
+# https://stackoverflow.com/questions/22538563/django-reverse-accessors-for-foreign-keys-clashing
+class SendingSiteDoc(SupportingDocument):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="%(class)s_supporting_docs")
+    site = models.ForeignKey(SendingSite, on_delete=models.CASCADE, related_name="supporting_docs")
+
+class ReceivingSiteDoc(SupportingDocument):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="%(class)s_supporting_docs")
+    site = models.ForeignKey(ReceivingSite, on_delete=models.CASCADE, related_name="supporting_docs")
 
 
 

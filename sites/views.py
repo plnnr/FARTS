@@ -2,11 +2,14 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.gis.measure import D
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.auth.decorators import login_required
 
 import requests
 import os
+import json
+from random import *
 
-from sites.models import SendingSite
+from sites.models import SendingSite, ReceivingSite, District, BaseZoneClass, BaseZone
 
 ##### Utilities #####
 def build_query_params(params):
@@ -139,6 +142,119 @@ def address_search_ajax(request):
     return JsonResponse(response.json())
 
 
+def get_assessor_details_ajax(request):
+    site_coords_raw = request.GET.get('site_coords', '') 
+    site_coords = site_coords_raw.split(',')
+    x = site_coords[0]
+    y = site_coords[1]
+    xyobj = '{"x":' + x + ',"y":' + y + '}'
+    pmap_server_api_key = os.getenv("PORTLAND_MAPS_SERVERSIDE_API_KEY")
+
+    assessor_params = {
+        'detail_type': 'assessor',
+        'sections': '*',
+        'geometry': f'{xyobj}', # { "x" : -13653136.529, "y" : 5705641.378}
+        'format': 'json',
+        'api_key': f'{pmap_server_api_key}',
+    }
+    
+    query_params = build_query_params(assessor_params)
+    base_url = "https://www.portlandmaps.com/api/detail/"
+    fetch_url = base_url + query_params
+
+    response = requests.get(fetch_url)
+
+    return response.json()
+
+def get_property_details_ajax(request):
+    site_coords_raw = request.GET.get('site_coords', '') 
+    site_coords = site_coords_raw.split(',')
+    x = site_coords[0]
+    y = site_coords[1]
+    xyobj = '{"x":' + x + ',"y":' + y + '}'
+    pmap_server_api_key = os.getenv("PORTLAND_MAPS_SERVERSIDE_API_KEY")
+
+    assessor_params = {
+        'detail_type': 'property',
+        'sections': '*',
+        'geometry': f'{xyobj}', # { "x" : -13653136.529, "y" : 5705641.378}
+        'format': 'json',
+        'api_key': f'{pmap_server_api_key}',
+    }
+    
+    query_params = build_query_params(assessor_params)
+    base_url = "https://www.portlandmaps.com/api/detail/"
+    fetch_url = base_url + query_params
+
+    response = requests.get(fetch_url)
+
+    return response.json()
+
+def make_fuzzy_POINT(x, y):
+    ### Adds noise to an exact location and returns a PostGIS point
+    numbers = list(range(-1000,-500)) + list(range(500,1000))
+    scale_adjustment = 180000. # larger number = more randomization
+
+    x_offset = choice(numbers)
+    y_offset = choice(numbers)
+    
+    x_fuzzy = x + x_offset / scale_adjustment
+    y_fuzzy = y + y_offset / scale_adjustment
+
+    fuzzy_point = GEOSGeometry(f'POINT({y_fuzzy} {x_fuzzy})', srid=4326)
+
+    return fuzzy_point
+
+
+@login_required
+def record_receiving_site(request):
+    data = json.loads(request.body)
+    
+    x = data['x_coord'] # -122.66392  # -13654885.113
+    y = data['y_coord'] # 45.536522  # 5675877.183
+    point = GEOSGeometry(f'POINT({y} {x})', srid=4326)
+
+    fuzzy_point = make_fuzzy_POINT(x, y)
+
+
+    # import pdb; pdb.set_trace()
+
+    # import pdb; pdb.set_trace()
+    # coordinates= models.PointField(srid=4326,default='SRID=3857;POINT(0.0 0.0)')
+
+    site = ReceivingSite()
+
+    site.street_address = data['street_address']
+    site.site_size = data['site_size']
+    site.building_size = data['building_size']
+    site.site_far = data['site_far']
+    site.location = point
+    site.fuzzy_location = fuzzy_point
+
+    site.pmaps_object = data['raw_data']
+    site.parcel_poly = json.dumps(data['raw_data']['taxlotGeometry']['geometry'])
+
+    site.target_far = data['target_far']
+    site.user = request.user
+
+    site.save() # must save first before adding many to many relationship
+
+    for zone in data['base_zones']:
+        base_zone, _ = BaseZone.objects.get_or_create(name = zone)
+        site.base_zones.add(base_zone)
+    
+    for zone in data['base_zone_classes']:
+        zone_class, _ = BaseZoneClass.objects.get_or_create(name=zone)
+        site.base_zone_classes.add(zone_class)
+
+    for district_name in data['districts']:
+        district, _ = BaseZoneClass.objects.get_or_create(name=district_name)
+        site.base_zone_classes.add(district)
+
+    return JsonResponse({'id': site.id})
+    
+
+    
 
 def get_landuse_details_ajax(request):
     site_coords_raw = request.GET.get('site_coords', '') 
@@ -146,14 +262,14 @@ def get_landuse_details_ajax(request):
     x = site_coords[0]
     y = site_coords[1]
     xyobj = '{"x":' + x + ',"y":' + y + '}'
-    # TODO: move this token to Django settings from an environment variable
     pmap_server_api_key = os.getenv("PORTLAND_MAPS_SERVERSIDE_API_KEY")
 
     # query parameters for getting zoning and land use information
     landuse_params = {
         'detail_type': 'zoning',
         'sections': '*',
-        'geometry': f'{xyobj}', # { "x" : -13653136.529, "y" : 5705641.378}
+        'geometry': f'{xyobj}', # {"x":-13654362.408,"y":5708284.816}
+        'format': 'json',
         'api_key': f'{pmap_server_api_key}',
     }
 
@@ -163,7 +279,15 @@ def get_landuse_details_ajax(request):
 
     response = requests.get(fetch_url)
 
-    return JsonResponse(response.json())
+    landuse = response.json()
+    assessor = get_assessor_details_ajax(request)
+    property = get_property_details_ajax(request)
+
+    return JsonResponse({
+        'landuse': landuse,
+        'assessor': assessor,
+        'property': property,
+    })
 
 #work: 
 #https://www.portlandmaps.com/api/detail/?&detail_type=zoning&sections=*&geometry={%20"x"%20:%20-13653136.529,%20"y"%20:%205705641.378}

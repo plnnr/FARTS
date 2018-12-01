@@ -1,24 +1,76 @@
-{% load static %}  {# Only load static once at the top of your file #}
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'layout.html' %}
+{% load static %} 
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <script src='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
-    <link href="{% static "sites/css/default.css"%}" rel='stylesheet' />
-    <title>Check your eligibility | Receiving site for FAR transfer</title>
-</head>
+{% block title %}
+Register site to send FAR | Floor-Area Ratio Transfer System (FARTS) | Transfer development rights today!
+{% endblock title %}
 
-<body>
-    
+{% block content %}
+<div class="">
+    <div class="section step-1 sell">
+        <div class='step sell' id="step-1">
+            <h3>Step 1</h3>
+        </div>
+        <div></div>
+        <div>
+            <div class='bubble-right sell'>
+                <div>
+                    <h2>Start here to see if your site is qualified.</h2>
+                    <p>Only certain sites can send transfers of development rights. FARTS<sup>&reg;</sup> currently only handles sites in multi-dwelling and mixed-use zones. While we cover sending sites in the <a href="#">Central City Plan District</a>and in <a href="#">Historic</a> or <a href="#">Conservation</a> Districts, some sites may not be eligibble to receive FAR transfers.</p>
+                    <p><small>Only multi-dwelling and mixed-use zones supported at this time.</small></p>
+                </div>
+            </div>
+        </div>
+        <div id='address-search-form'>
+            <h1>Enter address to determine eligibility.</h1>
+            <p>Read more about the rules <a href="#">here</a>.</p>
+            Receiving site address: <input id="address-part" type="text" name="address_part">
+            <button id="address-search">Find</button>
+            <button id="no-site-address">No address at site</button> <br/>
+            <div>
+                <ul id="suggestions"></ul>
+            </div>
+        </div>
+    </div>
+    <div class="section step-2">
+        <div class='step' id="step-2">
+            <h3>Step 2</h3>
+        </div>
+        <div class='bubble-bottom span-two-right'>
+            <div>
+                <h2>Confirm your site details.</h2>
+            </div>
+        </div>
+        <div class="site-selection" id='map'></div>
+        <div class="site-selection" id='site-details'>
+            <h3>Site details</h3>
+            <ul id='property-details'></ul>
+        </div>
+    </div>
+    <div class="section step-3">
+        <!-- <div class='step'>
+            <h3>Step 3</h3>
+        </div> -->
+        <div>
+            <div class='bubble-bottom'>
+                <div>
+                    <h2>Sign up to register site.</h2>
+                </div>
+            </div> 
+        </div>
+        <div class='step' id="step-3">
+            <h3>Step 3</h3>
+        </div>
+        <div class='span-one-right'>
+            <button id="confirm-button">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock content %}
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
-    <script src="{% static 'sites/js/default.js'%}"></script>
-
-</body>
-
-</html>
+{% block scripts %} 
+<script src="{% static 'sites/js/shared_assets.js'%}"></script>
+<script src="{% static 'sites/js/sending_sites.js'%}"></script>
+{% endblock scripts %}

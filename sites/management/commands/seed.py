@@ -15,9 +15,32 @@ DEFAULT_BASE_ZONE_CLASSES = [
 
 DEFAULT_DISTRICTS = [
     (2, 'Central City Plan District'), 
+    (2, 'Central City/South Auditorium Plan District'),
     (2, 'Johnson Creek Plan District'),
     (1, 'Eliot Conservation District'),
+    (1, 'Mississippi Conservation District'),
+    (1, 'Russell Conservation District'),
+    (1, 'Kenton Conservation District'),
+    (1, 'Woodlawn Conservation District'),
+    (1, 'Piedmont Conservation District'),
+    (0, '13th Avenue Historic District'),
+    (0, 'Alphabet Historic District'),
+    (0, 'East Portland / Grand Avenue Historic District'),
+    (0, 'Halprin Open Space Sequence Historic District'),
     (0, 'Irvington Historic District'),
+    (0, 'Kenton Commercial Historic District'),
+    (0, 'King\'s Hill Historic District'),
+    (0, 'Ladd\'s Addition Historic District'),
+    (0, 'Mount Tabor Park Historic District'),
+    (0, 'Mount Tabor Park Reservoirs Historic District'),
+    (0, 'New Chinatown / Japantown Historic District'),
+    (0, 'Peacock Lane Historic District'),
+    (0, 'Rocky Butte Scenic Drive Historic District'),
+    (0, 'Skidmore / Old Town Historic District'),
+    (0, 'South Portland Historic District'),
+    (0, 'Washington Park Reservoirs Historic District'),
+    (0, 'Willamette National Cemetery Historic District'),
+    (0, 'Yamhill Historic District'),
 ]
 
 class Command(BaseCommand):

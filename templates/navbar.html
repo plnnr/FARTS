@@ -13,7 +13,7 @@
         <ul>
             <li class="{% active_link 'about' strict=True %}"><a href="{% url 'about' %}">About</a></li>
             {% if user.is_authenticated %}
-                <li><a href="{% url 'accounts:dashboard'%}">Dashboard</a></li>
+                <li class="{% active_link 'accounts:dashboard' %}"><a href="{% url 'accounts:dashboard'%}">Dashboard</a></li>
                 <li><a href="{% url 'accounts:logout' %}">Log Out</a></li>
             {% else %}
                 <li><a href="{% url 'accounts:login' %}">Log In</a></li>

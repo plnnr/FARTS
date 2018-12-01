@@ -10,6 +10,7 @@ django-extensions = "*"
 requests = "*"
 python-dotenv = "*"
 django-active-link = "*"
+"jsonfield2" = "*"
 
 [dev-packages]
 pylint = "*"
