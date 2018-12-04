@@ -3,3 +3,4 @@ __pycache__
 *.sqlite3
 /static/static/shapes/
 .DS_Store
+.vscode
