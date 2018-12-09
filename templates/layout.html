@@ -9,6 +9,14 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.css' rel='stylesheet' />
     <link href="{% static "sites/css/default.css"%}" rel='stylesheet' />
+    <style>
+        .fade-enter-active, .fade-leave-active {
+        transition: opacity .5s;
+        }
+        .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+        opacity: 0;
+        }
+    </style>
     <title>{% block title %}{% endblock title %}</title>
 </head>
 

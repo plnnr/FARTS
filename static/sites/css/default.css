@@ -92,7 +92,7 @@ nav ul li.active a {
 
 footer {
     background-color: #28343b;
-    color: #8b9aa3;
+    color: #889fa5;
 }
 
 .footer-main {
@@ -183,12 +183,12 @@ footer {
     margin-top: 0;
 }
 
+
 .marketing-feature {
     margin: 2rem auto 2rem;
     flex: 0 0 33.333333%;
     padding: 2rem 2rem 0 2rem;
 }
-
 
 .section {
     display: grid;
@@ -196,8 +196,20 @@ footer {
     grid-template-rows: auto auto;
     grid-row-gap: 1em;
     padding: 2rem;
-
 }
+
+.container-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+}
+
+
+
+#app {
+    margin: 1rem;
+}
+
 
 .step h3 {
     margin-bottom: 1em;
@@ -222,6 +234,10 @@ footer {
 
 .section > div {
     margin: 0 1rem 0;
+}
+
+#map-container {
+    max-width: 600px;
 }
 
 #map {
@@ -249,11 +265,29 @@ footer {
     list-style: none;
 }
 
+#suggestions li {
+    cursor: pointer;
+    padding: 2px;
+}
+
+#suggestions li:hover {
+    text-decoration: underline;
+    background-color: #889fa5;
+    color: white;
+}
+
 #address-search-form h1 {
     font-family: 'Fredoka One';
     font-size: 2.3rem;
 }
 
+.site-address {
+    font-size: 1.3em;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    font-weight: 700;
+}
 .span-two-right {
     grid-area: 1 / 2 / 3 / end;
 }
@@ -325,3 +359,41 @@ footer {
     width: 50px;
     p
 }
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 99; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+  
+  /* Modal Content/Box */
+  .modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+  }
+  
+  /* The Close Button */
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }

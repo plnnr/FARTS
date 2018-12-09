@@ -2,6 +2,7 @@ from django.contrib.gis.db import models as geomodels
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
+from django.utils import timezone
 
 # steps for clearing data from database:
 # delete migration files (if migrations are broken)
@@ -98,6 +99,7 @@ TRANSFER_PURPOSES = (
     (0, "Tree"),
     (1, "Affordable Housing"),
     (2, "Historic Landmark"),
+    (3, "Other"),
 )
 
 class Site(models.Model):
@@ -112,6 +114,7 @@ class Site(models.Model):
     fuzzy_location = geomodels.PointField() # Location to be displayed to anonymous users
     parcel_poly = geomodels.PolygonField(default = cityhall)
     pmaps_object = JSONField()
+    created = models.DateTimeField(auto_now_add=True)
 
     ## Begin zoning 
     base_zones = models.ManyToManyField(BaseZone, blank=True)
@@ -171,17 +174,61 @@ class ReceivingSiteDoc(SupportingDocument):
 # x = SendingSite.objects.first() # <- first row
 # dir(x.location)
 
-class Auction(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="auction")
-    sending_site = models.OneToOneField(SendingSite, on_delete=models.DO_NOTHING)
-    # not completed until transaction finalized
-    receiving_site = models.OneToOneField(ReceivingSite, on_delete=models.DO_NOTHING)
-    reserve_price_sqft = models.IntegerField(default=False) # reserve price per square foot
+class InvalidBid(Exception):
+    pass
 
-    def add_bid(self):
-        ...
-        # check whether sending site is eligible to make bid
-        # do other error checking and updating 
+class Auction(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="auctions")
+    sending_site = models.OneToOneField(SendingSite, on_delete=models.DO_NOTHING)
+    created = models.DateTimeField(auto_now_add=True)
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+    starting_price_sqft = models.FloatField(default=1.0)
+    reserve_price_sqft = models.FloatField(default=0.0) # reserve price per square foot
+
+    # not completed until transaction finalized
+    # receiving_site = models.OneToOneField(ReceivingSite, on_delete=models.DO_NOTHING)
+
+    def validate_bid(self, user, amount):
+        if amount < self.starting_price_sqft:
+            raise InvalidBid('Bid amount too low. Must bid higher.')
+
+        if not self.start < timezone.now() < self.end:
+            raise InvalidBid('Auction is closed.')
+
+        if self.user == user:
+            raise InvalidBid('Cannot bid on your own auction.')
+
+        bids = self.bids.all()
+        if bids:
+            max_bid = bids.aggregate(models.Max('amount'))
+            if amount <= max_bid.amount:
+                raise InvalidBid('Bid amount too low. Must bid higher.')
     
+    def current_bid(self):
+        bids = self.bids.all()
+        max_bid = bids.aggregate(models.Max('amount'))
+        if not max_bid['amount__max']:
+            #No bids yet
+            return self.starting_price_sqft
+        else:
+            return max_bid
+
+    def add_bid(self, user, amount):
+        amount = abs(amount)
+        self.validate_bid(user, amount)
+
+        bid = Bid(user = user, auction = self, amount = amount)
+        bid.save()
+        return bid
+        
     def __str__(self):
-        return f'Auction for {self.sending_site.street_address} from {user}'
+        return f'[{self.id}] Auction for {self.sending_site.street_address} from {self.user}'
+
+
+class Bid(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bids")
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="bids")
+    amount = models.FloatField()
+    created = models.DateTimeField(auto_now_add=True)
+    receiving_site = models.ForeignKey(ReceivingSite, on_delete=models.DO_NOTHING, null=True, blank=True, related_name="bids")

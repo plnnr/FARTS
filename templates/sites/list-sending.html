@@ -1,0 +1,94 @@
+{% extends 'layout.html' %}
+{% load static %}
+
+{% block title %}
+List view of sending sites | Floor-Area Ratio Transfer System (FARTS)
+{% endblock title %}
+
+{% block content %}
+    {% comment %} {% for site in sending_sites %}
+        <a href="{% url 'sites:sending_site_details' id=site.id %}">
+            <h3>{{ site.street_address }} <small>by {{ site.user }}</small></h3>
+        </a>
+        <div class='site-list-details' id='{{ site.id }}'>
+            <a href="#"><button>View</button></a><br />
+            <a href="#"><button>Edit</button></a><br />
+            <a href="#"><button>Delete</button></a><br />
+            <div>Auction status</div>
+            <div id='auction-{{ site.id }}'></div> 
+            
+        </div>
+    {% endfor %} {% endcomment %}
+    <div id="app">
+        <!--<button v-on:click="addFakeSite">Add Fake Site</button> -->
+        <transition name="fade" mode="out-in">
+            <div v-if="loading" key="loading">
+                Loading...
+            </div>
+            <div v-else>
+                <div class="container-2">
+                    <div><h3>Site address</h3></div>
+                    <div><h3>Actions</h3></div>
+                    <div><h3>Auction status</h3></div>
+                    <div><h3>Auction actions</h3></div>
+                </div>
+                <div v-for="site in sites" class="container-2" id="sending-list-view-data">
+                    <div><h4>[[ site.streetAddress ]]</h4></div>
+                    <div class='site-list-details'>
+                        <a v-bind:href="'/sites/view/sending/details/' + site.id"><button>View</button></a> <!-- v-bind will treat the contents as JS expression-->
+                        <a href="#"><button>Edit</button></a>
+                        <a href="#"><button>Delete</button></a>
+                    </div>
+                    <div>
+                        <div v-if="site.auctionStatus">Active | Ended</div>
+                        <div v-else>Inactive</div>
+                    </div>
+                    <div>
+                        <div v-if="site.auctionStatus">View | Edit | Delete</div>
+                        <div v-else>
+                            <a v-bind:href="'/sites/auction/create'"><button>New auction</button></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </div>
+{% endblock content %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+<script>
+const app = new Vue({
+    delimiters: ['[[', ']]'],
+    el: '#app',
+    data: {
+        sites: null,
+        loading: true,
+    },
+    methods: {
+        getSendingSites: function() {
+            axios.get('/sites/sending/view')
+            .then((response) => {
+                this.sites = response.data.sites
+
+                setTimeout(() => {
+                    this.loading = false
+                }, 300)
+            })
+        },
+        addFakeSite: function() {
+            this.sites.push({
+                streetAddress: 'DJASDJSAJDSAJDJSA',
+                auctionStatus: false,
+                user: 'djskajdklsajkdlaskdas',
+            })
+        }
+    },
+    created: function() { // when site is done loading, run these functions
+        this.getSendingSites()
+    },
+})
+</script>
+
+{% endblock scripts %}

@@ -24,8 +24,7 @@ Register site to receive FAR | Floor-Area Ratio Transfer System (FARTS) | Transf
         <div id='address-search-form'>
             <h1>Enter address to determine maximum FAR transfer.</h1>
             <p>Read more about the rules <a href="#">here</a>.</p>
-            Receiving site address: <input id="address-part" type="text" name="address_part">
-            <button id="address-search">Find</button>
+            Receiving site address: <input id="address-part" type="text" name="address_part"><br/>
             <button id="no-site-address">No address at site</button> <br/>
             <div>
                 <ul id="suggestions"></ul>
@@ -43,8 +42,8 @@ Register site to receive FAR | Floor-Area Ratio Transfer System (FARTS) | Transf
         </div>
         <div class="site-selection" id='map'></div>
         <div class="site-selection" id='site-details'>
-            <h3>Site details</h3>
-            <ul id='property-details'></ul>
+            {% comment %} <h3>Site details</h3> {% endcomment %}
+            <div id='property-details'></div>
         </div>
     </div>
     <div class="section step-3">
@@ -65,6 +64,14 @@ Register site to receive FAR | Floor-Area Ratio Transfer System (FARTS) | Transf
             <button id="confirm-button">
                 Confirm
             </button>
+            <div class='modal' id='modal-confirm-add'>
+                <div class='modal-content'>
+                    <span class='close'>&times;</span>
+                    <h2>Success!</h2>
+                    <p>Your site has been added to the database.</p>
+                    
+                </div>
+            </div>
         </div>
     </div>
 </div>

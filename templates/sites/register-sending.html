@@ -24,8 +24,7 @@ Register site to send FAR | Floor-Area Ratio Transfer System (FARTS) | Transfer 
         <div id='address-search-form'>
             <h1>Enter address to determine eligibility.</h1>
             <p>Read more about the rules <a href="#">here</a>.</p>
-            Receiving site address: <input id="address-part" type="text" name="address_part">
-            <button id="address-search">Find</button>
+            Receiving site address: <input id="address-part" type="text" name="address_part"><br/>
             <button id="no-site-address">No address at site</button> <br/>
             <div>
                 <ul id="suggestions"></ul>
@@ -43,8 +42,8 @@ Register site to send FAR | Floor-Area Ratio Transfer System (FARTS) | Transfer 
         </div>
         <div class="site-selection" id='map'></div>
         <div class="site-selection" id='site-details'>
-            <h3>Site details</h3>
-            <ul id='property-details'></ul>
+            {% comment %} <h3>Site details</h3> {% endcomment %}
+            <div id='property-details'></div>
         </div>
     </div>
     <div class="section step-3">
@@ -62,9 +61,25 @@ Register site to send FAR | Floor-Area Ratio Transfer System (FARTS) | Transfer 
             <h3>Step 3</h3>
         </div>
         <div class='span-one-right'>
-            <button id="confirm-button">
-                Confirm
-            </button>
+            <form>
+                What is the purpose of your transfer? <select id = 'transfer-purpose' name="transfer_purpose">
+                    <option disabled="disabled" selected="selected">Select a purpose...</option>
+                    <option value="0">Tree preservation</option>
+                    <option value="1">Affordable housing preservation</option>
+                    <option value="2">Historic landmark preservation</option>
+                    <option value="3">Other</option>
+                </select><br />
+                <button id="confirm-button">Confirm</button>
+            </form>
+            
+            <div class='modal' id='modal-confirm-add'>
+                <div class='modal-content'>
+                    <span class='close'>&times;</span>
+                    <h2>Success!</h2>
+                    <p>Your site has been added to the database.</p>
+                    
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.gis.measure import D
 from django.contrib.gis.geos import GEOSGeometry
@@ -9,7 +9,8 @@ import os
 import json
 from random import *
 
-from sites.models import SendingSite, ReceivingSite, District, BaseZoneClass, BaseZone
+from sites.forms import AuctionForm
+from sites.models import SendingSite, ReceivingSite, District, BaseZoneClass, BaseZone, Auction, Bid
 
 ##### Utilities #####
 def build_query_params(params):
@@ -18,109 +19,40 @@ def build_query_params(params):
         param_string += f"{key}={value}&"
     return param_string
 
-#####################
 
-def test_geospatial(request):
-    x = -122.66392  # -13654885.113
-    y = 45.536522  # 5675877.183
-    point = GEOSGeometry(f'POINT({x} {y})', srid=4326)
+def get_landuse_details_ajax(request):
+    site_coords_raw = request.GET.get('site_coords', '') 
+    site_coords = site_coords_raw.split(',')
+    x = site_coords[0]
+    y = site_coords[1]
+    xyobj = '{"x":' + x + ',"y":' + y + '}'
+    pmap_server_api_key = os.getenv("PORTLAND_MAPS_SERVERSIDE_API_KEY")
 
-    result = SendingSite.objects.filter(
-        location__distance_lte=(point, D(mi=2))
-    )
-    import pdb; pdb.set_trace()
+    # query parameters for getting zoning and land use information
+    landuse_params = {
+        'detail_type': 'zoning',
+        'sections': '*',
+        'geometry': f'{xyobj}', # {"x":-13654362.408,"y":5708284.816}
+        'format': 'json',
+        'api_key': f'{pmap_server_api_key}',
+    }
 
+    query_params = build_query_params(landuse_params)
+    base_url = "https://www.portlandmaps.com/api/detail/"
+    fetch_url = base_url + query_params
 
-def sending_site(request):
-    # specify path to template here
-    # TODO: move this token to Django settings from an environment variable
-    # found in the Mapbox account settings and getting started instructions
-    # see https://www.mapbox.com/account/ under the "Access tokens" section
-    mapbox_access_token = 'pk.eyJ1IjoibmtvYmVsIiwiYSI6ImNqbzF4M3Q4ODBnZHoza254dWplOGk5ZnAifQ.TKDCR6nbv268FBi68MSbiA'
-    context = {'mapbox_access_token': mapbox_access_token}
-    return render(request, 'sites/register-sending.html', context)
+    response = requests.get(fetch_url)
 
-def receiving_site(request):
-        # specify path to template here
-    # TODO: move this token to Django settings from an environment variable
-    # found in the Mapbox account settings and getting started instructions
-    # see https://www.mapbox.com/account/ under the "Access tokens" section
-    mapbox_access_token = 'pk.eyJ1IjoibmtvYmVsIiwiYSI6ImNqbzF4M3Q4ODBnZHoza254dWplOGk5ZnAifQ.TKDCR6nbv268FBi68MSbiA'
-    context = {'mapbox_access_token': mapbox_access_token}
-    return render(request, 'sites/register-receiving.html', context)
+    landuse = response.json()
+    assessor = get_assessor_details_ajax(request)
+    property = get_property_details_ajax(request)
 
-def home(request):
-    context = {}
-    return render(request, 'home.html', context)
+    return JsonResponse({
+        'landuse': landuse,
+        'assessor': assessor,
+        'property': property,
+    })
 
-def about(request):
-    context = {}
-    return render(request, 'about.html', context)
-
-def rules(request):
-    context = {}
-    return render(request, 'rules.html', context)
-
-
-# to see all fiels, do `dir(object.object)` for example
-# x = SendingSite.objects.first() # <- first row
-# dir(x.location)
-
-def determine_eligibility_receiving(receiving_site):
-    eligible = False
-    if receiving_site.historic_district != True:
-        eligible = True
-    if receiving_site.conservation_district != True:
-        eligible = True
-    if receiving_site.plan_district not in ["Central City Plan District", "Central City/South Auditorium"]:
-        eligible = True
-    return eligible
-
-
-def determine_eligibility_match(sending_site, receiving_site):
-    eligible = False
-    warning = ''
-    if sending_site.base_zone_class == receiving_site.base_zone_class:
-        eligible = True
-    if sending_site.credit_sqft > receiving_site.credit_max_sqft:
-        warning += "Sending site credit total exceeds receiving site allowable maximum"
-    return eligible, warning
-
-
-# if sendingsite.historic_district == True:
-    #
-
-
-def get_tract_fips_lat_lng(raw_address, raw_city, raw_state):
-    address = raw_address
-    city = raw_city
-    state = raw_state
-    geocoding_base_url = "https://geocoding.geo.census.gov/geocoder/geographies/address?"
-    address_url = f"street={address.replace(' ', '+').replace('.', '')}&city={city}&state={state}"
-    benchmark_etc_url = "&benchmark=Public_AR_Census2010&vintage=Census2010_Census2010&format=json"
-
-    url_to_geocode = geocoding_base_url+address_url+benchmark_etc_url
-    
-    print(f"Geocoding request at following URL:\n{url_to_geocode}")
-    
-    with urllib.request.urlopen(url_to_geocode) as response:
-        geocoding_response = json.load(response)
-        # pprint(geocoding_response)
-    
-    try:
-        # tract_geoid = geocoding_response['result']['addressMatches'][0]['geographies']['Census Tracts'][0]['GEOID']
-        tract6 = geocoding_response['result']['addressMatches'][0]['geographies']['Census Tracts'][0]['TRACT']
-        state_fips = geocoding_response['result']['addressMatches'][0]['geographies']['Census Tracts'][0]['STATE']
-        county_fips = geocoding_response['result']['addressMatches'][0]['geographies']['Census Tracts'][0]['COUNTY']
-        county_name = geocoding_response['result']['addressMatches'][0]['geographies']['Counties'][0]['NAME']
-        lat = geocoding_response['result']['addressMatches'][0]['coordinates']['x']
-        lng = geocoding_response['result']['addressMatches'][0]['coordinates']['y']
-    except IndexError as e:
-        print(f"IndexError occurred:\t{e}")
-        if geocoding_response['result']['addressMatches'] == []:
-            print(f"No matching geocoding results for '{address}, {city}, {state}.'")
-
-    return tract6, county_fips, state_fips, lat, lng, county_name
 
 # http://localhost:8000/search?address_part=1220%20NE%2017
 def address_search_ajax(request):
@@ -205,6 +137,74 @@ def make_fuzzy_POINT(x, y):
 
     return fuzzy_point
 
+#####################
+
+def test_geospatial(request):
+    x = -122.66392  # -13654885.113
+    y = 45.536522  # 5675877.183
+    point = GEOSGeometry(f'POINT({x} {y})', srid=4326)
+
+    result = SendingSite.objects.filter(
+        location__distance_lte=(point, D(mi=2))
+    )
+    import pdb; pdb.set_trace()
+
+@login_required
+def sending_site(request):
+    # specify path to template here
+    # TODO: move this token to Django settings from an environment variable
+    # found in the Mapbox account settings and getting started instructions
+    # see https://www.mapbox.com/account/ under the "Access tokens" section
+    mapbox_access_token = 'pk.eyJ1IjoibmtvYmVsIiwiYSI6ImNqbzF4M3Q4ODBnZHoza254dWplOGk5ZnAifQ.TKDCR6nbv268FBi68MSbiA'
+    context = {'mapbox_access_token': mapbox_access_token}
+    return render(request, 'sites/register-sending.html', context)
+
+@login_required
+def receiving_site(request):
+        # specify path to template here
+    # TODO: move this token to Django settings from an environment variable
+    # found in the Mapbox account settings and getting started instructions
+    # see https://www.mapbox.com/account/ under the "Access tokens" section
+    mapbox_access_token = 'pk.eyJ1IjoibmtvYmVsIiwiYSI6ImNqbzF4M3Q4ODBnZHoza254dWplOGk5ZnAifQ.TKDCR6nbv268FBi68MSbiA'
+    context = {'mapbox_access_token': mapbox_access_token}
+    return render(request, 'sites/register-receiving.html', context)
+
+def home(request):
+    context = {}
+    return render(request, 'home.html', context)
+
+def about(request):
+    context = {}
+    return render(request, 'about.html', context)
+
+def rules(request):
+    context = {}
+    return render(request, 'rules.html', context)
+
+
+# to see all fiels, do `dir(object.object)` for example
+# x = SendingSite.objects.first() # <- first row
+# dir(x.location)
+
+def determine_eligibility_receiving(receiving_site):
+    eligible = False
+    if receiving_site.historic_district != True:
+        eligible = True
+    if receiving_site.conservation_district != True:
+        eligible = True
+    if receiving_site.plan_district not in ["Central City Plan District", "Central City/South Auditorium"]:
+        eligible = True
+    return eligible
+
+def determine_eligibility_match(sending_site, receiving_site):
+    eligible = False
+    warning = ''
+    if sending_site.base_zone_class == receiving_site.base_zone_class:
+        eligible = True
+    if sending_site.credit_sqft > receiving_site.credit_max_sqft:
+        warning += "Sending site credit total exceeds receiving site allowable maximum"
+    return eligible, warning
+
 
 @login_required
 def record_receiving_site(request):
@@ -215,9 +215,6 @@ def record_receiving_site(request):
     point = GEOSGeometry(f'POINT({y} {x})', srid=4326)
 
     fuzzy_point = make_fuzzy_POINT(x, y)
-
-
-    # import pdb; pdb.set_trace()
 
     # import pdb; pdb.set_trace()
     # coordinates= models.PointField(srid=4326,default='SRID=3857;POINT(0.0 0.0)')
@@ -254,57 +251,176 @@ def record_receiving_site(request):
     return JsonResponse({'id': site.id})
     
 
+@login_required
+def record_sending_site(request):
+    data = json.loads(request.body)
+    
+    x = data['x_coord'] # -122.66392  # -13654885.113
+    y = data['y_coord'] # 45.536522  # 5675877.183
+    point = GEOSGeometry(f'POINT({y} {x})', srid=4326)
+
+    fuzzy_point = make_fuzzy_POINT(x, y)
+
+
+    # import pdb; pdb.set_trace()
+
+    # import pdb; pdb.set_trace()
+    # coordinates= models.PointField(srid=4326,default='SRID=3857;POINT(0.0 0.0)')
+
+    site = SendingSite()
+
+    site.street_address = data['street_address']
+    site.site_size = data['site_size']
+    site.building_size = data['building_size']
+    site.site_far = data['site_far']
+    site.location = point
+    site.fuzzy_location = fuzzy_point
+
+    site.pmaps_object = data['raw_data']
+    site.parcel_poly = json.dumps(data['raw_data']['taxlotGeometry']['geometry'])
+
+    site.transferrable_far = data['transferrable_far']
+    site.transfer_purpose = data['transfer_purpose']
+    site.user = request.user
+
+    site.save() # must save first before adding many to many relationship
+
+    for zone in data['base_zones']:
+        base_zone, _ = BaseZone.objects.get_or_create(name = zone)
+        site.base_zones.add(base_zone)
+    
+    for zone in data['base_zone_classes']:
+        zone_class, _ = BaseZoneClass.objects.get_or_create(name=zone)
+        site.base_zone_classes.add(zone_class)
+
+    for district_name in data['districts']:
+        district, _ = BaseZoneClass.objects.get_or_create(name=district_name)
+        site.base_zone_classes.add(district)
+
+    return JsonResponse({'id': site.id})
+
+def get_bids(id):
+    bid = Bid.objects.filter(receiving_site__id=id)
+    return bid  
+
+def make_bid(request, id):
+    ...
+
+def view_auction(request, id):
+    auction = get_object_or_404(Auction, sending_site__id=id)
+    sending_site = auction.sending_site
+    
+    context = {
+        'sendingSite': sending_site,
+        'auction': auction,
+    }
+    auction.current_bid()
+    ##import pdb; pdb.set_trace()
+    return render(request, 'sites/view_auction.html', context)
+
     
 
-def get_landuse_details_ajax(request):
-    site_coords_raw = request.GET.get('site_coords', '') 
-    site_coords = site_coords_raw.split(',')
-    x = site_coords[0]
-    y = site_coords[1]
-    xyobj = '{"x":' + x + ',"y":' + y + '}'
-    pmap_server_api_key = os.getenv("PORTLAND_MAPS_SERVERSIDE_API_KEY")
+@login_required
+def view_receiving(request):
+    receiving_sites = ReceivingSite.objects.filter(user=request.user)
 
-    # query parameters for getting zoning and land use information
-    landuse_params = {
-        'detail_type': 'zoning',
-        'sections': '*',
-        'geometry': f'{xyobj}', # {"x":-13654362.408,"y":5708284.816}
-        'format': 'json',
-        'api_key': f'{pmap_server_api_key}',
+    ### import pdb; pdb.set_trace()
+    context = {
+        'receiving_sites': receiving_sites,
     }
+    return render(request, 'sites/list-receiving.html', context)
 
-    query_params = build_query_params(landuse_params)
-    base_url = "https://www.portlandmaps.com/api/detail/"
-    fetch_url = base_url + query_params
+@login_required
+def view_receiving_sites(request):
+    receiving_sites = ReceivingSite.objects.filter(user=request.user)
+    data = []
 
-    response = requests.get(fetch_url)
+    for site in receiving_sites:
+        bid_status = Bid.objects.filter(receiving_site__id=site.id).exists()
+        data.append({
+            'id': site.id,
+            'streetAddress': site.street_address,
+            'bidStatus': bid_status,
+            'user': site.user.username,
+        })
 
-    landuse = response.json()
-    assessor = get_assessor_details_ajax(request)
-    property = get_property_details_ajax(request)
+    return JsonResponse({'sites': data})
 
-    return JsonResponse({
-        'landuse': landuse,
-        'assessor': assessor,
-        'property': property,
-    })
 
-#work: 
-#https://www.portlandmaps.com/api/detail/?&detail_type=zoning&sections=*&geometry={%20"x"%20:%20-13653136.529,%20"y"%20:%205705641.378}
+def get_auction(id):
+    auction = Auction.objects.filter(sending_site__id=id)
+    return auction
 
-#doesn't:
-#https://www.portlandmaps.com/api/detail/?detail_type=zoning&sections=*&detail_id=&geometry={%22x%22:-13654362.408,%22y%22:5708284.816}&property_id=&file_type=&file_id=&cache_clear=&format=&callback=
+## Would have been a good opportunity for Vue below
+@login_required
+def view_sending(request):
+    sending_sites = SendingSite.objects.filter(user=request.user)
+    
+    auctions = {}
+    for site in sending_sites:
+        if len(get_auction(site.id)) == 0:
+            auctions[f'{site.id}'] = None
+        else:
+            auctions[f'{site.id}'] = get_auction(site.id)
+    auctions = {site.id: get_auction(site.id) for site in sending_sites}
+    ### import pdb; pdb.set_trace()
+    context = {
+        'sending_sites': sending_sites,
+        'auctions': auctions,
+    }
+    return render(request, 'sites/list-sending.html', context)
 
-# landuse_params = {
-#         'detail_type': 'zoning',
-#         'sections': '*',
-#         'detail_id': '',
-#         'geometry': f'{xyobj}', # { "x" : -13653136.529, "y" : 5705641.378}
-#         'property_id': '',
-#         'file_type': '',
-#         'file_id': '',
-#         'cache_clear': '',
-#         'format': '',
-#         'callback': '',
-#         'api_key': f'{pmap_server_api_key}',
-# }
+@login_required
+def view_sending_sites(request):
+    sending_sites = SendingSite.objects.filter(user=request.user)
+    data = []
+
+    for site in sending_sites:
+        auction_status = Auction.objects.filter(sending_site__id=site.id).exists()
+        data.append({
+            'id': site.id,
+            'streetAddress': site.street_address,
+            'auctionStatus': auction_status,
+            'user': site.user.username,
+        })
+
+    return JsonResponse({'sites': data})
+
+def get_auction_activity(id):
+    auction = Auction.objects.filter(sending_site__id=id)
+
+@login_required
+def receiving_site_details(request, id):
+    receiving_site = get_object_or_404(ReceivingSite, id=id)
+    return render(request, 'sites/receiving_site_detail.html', {'object': receiving_site})
+
+
+@login_required
+def sending_site_details(request, id):
+    sending_site = get_object_or_404(SendingSite, id=id)
+    return render(request, 'sites/sending_site_detail.html', {'object': sending_site})
+
+@login_required
+def create_auction(request):
+    if request.method == 'POST':
+        form = AuctionForm(request.user, request.POST)
+
+        if form.is_valid():
+            auction = form.save(commit=False)
+            auction.user = request.user
+            auction.save()
+
+            return redirect('/accounts/dashboard')
+    else:
+        form = AuctionForm(request.user)
+
+    return render(request, 'sites/create_auction.html', {'form': form})
+    # request.GET.get('user')
+
+    # user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="auctions")
+    # sending_site = models.OneToOneField(SendingSite, on_delete=models.DO_NOTHING)
+    # created = models.DateTimeField(auto_now_add=True)
+    # start = models.DateTimeField()
+    # end = models.DateTimeField()
+    # starting_price_sqft = models.FloatField(default=1.0)
+    # reserve_price_sqft = models.FloatField(default=0.0)

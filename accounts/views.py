@@ -31,3 +31,4 @@ def sign_up(request):
 @login_required
 def dashboard(request):
     return render(request, 'accounts/dashboard.html')
+
