@@ -1,5 +1,3 @@
-
-
 @import url(https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css);
 @import url('https://fonts.googleapis.com/css?family=Alfa+Slab+One|Open+Sans:400,700|Fredoka+One');
 
@@ -357,7 +355,6 @@ footer {
 
 #dashboard-title img {
     width: 50px;
-    p
 }
 
 /* The Modal (background) */
@@ -382,6 +379,10 @@ footer {
     border: 1px solid #888;
     width: 80%; /* Could be more or less, depending on screen size */
   }
+
+  .modal.show {
+      display: block;
+  }
   
   /* The Close Button */
   .close {
@@ -397,3 +398,5 @@ footer {
     text-decoration: none;
     cursor: pointer;
   }
+
+  

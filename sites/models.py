@@ -128,7 +128,7 @@ class Site(models.Model):
 class SendingSite(Site):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sending_sites")
     transfer_purpose = models.IntegerField(choices = TRANSFER_PURPOSES) # Tree, housing, historic landmark
-    transferrable_far = models.FloatField()
+    transferrable_far = models.FloatField(null=True, blank=True)
 
 class ReceivingSite(Site):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiving_sites")

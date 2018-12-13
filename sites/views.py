@@ -139,16 +139,6 @@ def make_fuzzy_POINT(x, y):
 
 #####################
 
-def test_geospatial(request):
-    x = -122.66392  # -13654885.113
-    y = 45.536522  # 5675877.183
-    point = GEOSGeometry(f'POINT({x} {y})', srid=4326)
-
-    result = SendingSite.objects.filter(
-        location__distance_lte=(point, D(mi=2))
-    )
-    import pdb; pdb.set_trace()
-
 @login_required
 def sending_site(request):
     # specify path to template here
@@ -186,24 +176,62 @@ def rules(request):
 # x = SendingSite.objects.first() # <- first row
 # dir(x.location)
 
-def determine_eligibility_receiving(receiving_site):
-    eligible = False
-    if receiving_site.historic_district != True:
-        eligible = True
-    if receiving_site.conservation_district != True:
-        eligible = True
-    if receiving_site.plan_district not in ["Central City Plan District", "Central City/South Auditorium"]:
-        eligible = True
-    return eligible
+# def determine_eligibility_receiving(receiving_site):
+#     eligible = False
+#     if receiving_site.historic_district != True:
+#         eligible = True
+#     if receiving_site.conservation_district != True:
+#         eligible = True
+#     if receiving_site.plan_district not in ["Central City Plan District", "Central City/South Auditorium"]:
+#         eligible = True
+#     return eligible
 
-def determine_eligibility_match(sending_site, receiving_site):
-    eligible = False
-    warning = ''
-    if sending_site.base_zone_class == receiving_site.base_zone_class:
-        eligible = True
-    if sending_site.credit_sqft > receiving_site.credit_max_sqft:
-        warning += "Sending site credit total exceeds receiving site allowable maximum"
-    return eligible, warning
+# def determine_eligibility_match(sending_site, receiving_site):
+#     eligible = False
+#     warning = ''
+#     if sending_site.base_zone_class == receiving_site.base_zone_class:
+#         eligible = True
+#     if sending_site.credit_sqft > receiving_site.credit_max_sqft:
+#         warning += "Sending site credit total exceeds receiving site allowable maximum"
+#     return eligible, warning
+
+def get_matching_sending_sites(id, distance=99):
+    ## pk of receiving site and search radius in miles
+    receiving_site = get_object_or_404(ReceivingSite, id=id)
+    
+    bz_classes = receiving_site.base_zone_classes.all()
+
+    sending_sites = SendingSite.objects.filter(
+        base_zone_classes__in = bz_classes,
+        location__distance_lte = (receiving_site.location, D(mi=distance)),
+    )
+
+    return sending_sites
+
+@login_required
+def list_matching_sending_sites(request, id):
+    distance = request.GET.get('distance')
+    receiving_site = get_object_or_404(ReceivingSite, id=id)
+
+    if distance:
+        sending_sites = get_matching_sending_sites(receiving_site.id, distance=distance)
+    else:
+        sending_sites = get_matching_sending_sites(receiving_site.id)
+
+    data = []
+    for site in sending_sites:
+        sending_sites_ids = [s.id for s in sending_sites]
+        # import pdb; pdb.set_trace()
+        data.append({
+            'id': site.id,
+            'fuzzyLocation': {
+                'x': site.fuzzy_location.x,
+                'y': site.fuzzy_location.y,
+            },
+            'transferrableFAR': site.transferrable_far,
+        })
+
+    return JsonResponse({'eligibleSites': data})
 
 
 @login_required
@@ -331,7 +359,7 @@ def view_receiving(request):
     return render(request, 'sites/list-receiving.html', context)
 
 @login_required
-def view_receiving_sites(request):
+def view_receiving_sites_by_user(request):
     receiving_sites = ReceivingSite.objects.filter(user=request.user)
     data = []
 
@@ -371,7 +399,7 @@ def view_sending(request):
     return render(request, 'sites/list-sending.html', context)
 
 @login_required
-def view_sending_sites(request):
+def view_sending_sites_by_user(request):
     sending_sites = SendingSite.objects.filter(user=request.user)
     data = []
 

@@ -15,6 +15,8 @@ const $noAddressButton = $('#no-site-address');
 const $coordSearchButton = $('#submit-coords');
 const $propertyDetails = $('#property-details');
 const $confirmButton = $('#confirm-button');
+const $divRegisterForm = $('#register-site-form');
+$divRegisterForm.hide()
 
 ///////// Utility functions /////////
 
@@ -135,21 +137,15 @@ function renderTaxlotBorder(data) {
 /////// Modal jquery selectors and event listeners
 
 const $modal = $('#modal-confirm-add');
-const $span = $('.modal.close')
+const $span = $('.close')
 
 $confirmButton.on('click', function() {
     $modal.css({ display: "block" });
 })
 
 $span.on('click', function() {
-    $modal.css({ display: "none" });
+    $modal.toggle();
 })
-
-window.onclick = function(e) {
-    if (e.target == $modal) {
-        $modal.css({ display: "none" });
-    }
-}
 
 ////// Sending site-specific variables
 
@@ -198,15 +194,6 @@ function getSendingEligibility(zoneClasses, isMDZ, isMUZ, planDistrictCodes) {
             eligibilityObject.eligibilityText = "Eligible to send to multi-dwelling zones.";
             eligibilityObject.eligibleZoneClasses = ['MDZ'];
         }
-
-        /////// Only valid for receiving sites.
-        // planDistrictCodes.forEach(function(code) {
-        //     if ($.inArray(code, forbiddenDistrictCodes) >= 0) {
-        //         eligibilityObject.isEligible = false;
-        //         eligibilityObject.eligibilityText = "Not eligible to receive transfer.";
-        //         eligibilityObject.eligibleZoneClasses = null;
-        //     }
-        // });
     }
 
     return eligibilityObject
@@ -271,6 +258,10 @@ function renderSiteInfo(data, taxlotGeometry) {
     let siteSize = data.assessor.general.total_land_area_sqft;
     let bldgSize = data.property.summary.sqft;
     let siteFAR = bldgSize / siteSize;
+
+    if (eligible) {
+        $divRegisterForm.show()
+    }
 
     // console.log(overlays)
 
@@ -432,6 +423,6 @@ $confirmButton.on('click', function(event) {
         contentType : 'application/json',
     })
         .done(function(data) {
-            console.log(data)
+            // window.location.replace('/sites/view/sending/details/' + data.id )
         });
 });

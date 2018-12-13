@@ -15,6 +15,8 @@ const $noAddressButton = $('#no-site-address');
 const $coordSearchButton = $('#submit-coords');
 const $propertyDetails = $('#property-details');
 const $confirmButton = $('#confirm-button');
+const $divRegisterForm = $('#register-site-form');
+$divRegisterForm.hide()
 
 ///////// Utility functions /////////
 
@@ -144,23 +146,16 @@ function renderTaxlotBorder(data) {
 /////// Modal jquery selectors and event listeners
 
 const $modal = $('#modal-confirm-add');
-const $span = $('span .close')
+const $span = $('.close')
 
 $confirmButton.on('click', function() {
     $modal.css({ display: "block" });
 })
 
 $span.on('click', function() {
-    $modal.css({ display: "none" });
-    //$modal.hide();
+    $modal.toggle();
 })
 
-window.onclick = function(e) {
-    if (e.target == $modal) {
-        //$modal.css({ display: "none" });
-        $modal.hide();
-    }
-}
 
 ////// Receiving site-specific variables
 
@@ -212,13 +207,14 @@ function getReceivingEligibility(zoneClasses, isMDZ, isMUZ, planDistrictCodes) {
 
         planDistrictCodes.forEach(function(code) {
             if ($.inArray(code, forbiddenDistrictCodes) >= 0) {
-                eligibilityObject.isEligible = false;
+                eligibilityObject.eligible = false;
                 eligibilityObject.eligibilityText = "Not eligible to receive transfer.";
                 eligibilityObject.eligibleZoneClasses = null;
             }
         });
     }
-
+    
+    console.log(eligibilityObject)
     return eligibilityObject
 }
 
@@ -281,6 +277,10 @@ function renderSiteInfo(data, taxlotGeometry) {
     let siteSize = data.assessor.general.total_land_area_sqft;
     let bldgSize = data.property.summary.sqft;
     let siteFAR = bldgSize / siteSize;
+
+    if (eligible) {
+        $divRegisterForm.show()
+    }
 
     // console.log(overlays)
 
@@ -440,7 +440,7 @@ $confirmButton.on('click', function(event) {
         contentType : 'application/json',
     })
         .done(function(data) {
-            console.log(data)
+            //window.location.replace('/sites/view/receiving/details/' + data.id )
         });
 });
 

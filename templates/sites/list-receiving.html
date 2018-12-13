@@ -32,8 +32,17 @@ List view of receiving sites | Floor-Area Ratio Transfer System (FARTS)
                     <div>
                         <div v-if="site.bidStatus">View | Edit | Delete</div>
                         <div v-else>
-                            <a href="#"><button>Find FAR</button></a>
+                            <button v-on:click="getMatchingSendingSites(site.id)">Find FAR</button>
                         </div>
+                    </div>
+                </div>
+                <div class="modal" :class="{ show: showingModal }" id='modal-confirm-add'>
+                    <div class='modal-content'>
+                        <span @click="showingModal = false" class='close'>&times;</span>
+                        <h1>Eligible sending sites</h1>
+                        <div v-for="eligibleSite in eligibleSendingSites">
+                            <br/><div>Site near [[eligibleSite.fuzzyLocation.x.toFixed(3)]], [[eligibleSite.fuzzyLocation.y.toFixed(3)]] with [[eligibleSite.transferrableFAR]] sqft to transfer.</div>
+                        </div>  
                     </div>
                 </div>
             </div>
@@ -51,6 +60,8 @@ const app = new Vue({
     data: {
         sites: null,
         loading: true,
+        eligibleSendingSites: [],
+        showingModal: false,
     },
     methods: {
         getReceivingSites: function() {
@@ -63,6 +74,16 @@ const app = new Vue({
                 }, 300)
             })
         },
+
+        getMatchingSendingSites: function(id) {
+            axios.get('/sites/view/eligible-sites/' + id)
+            .then((response) => {
+                console.log(response.data)
+                this.eligibleSendingSites = []
+                this.eligibleSendingSites = response.data.eligibleSites
+                this.showingModal = true
+            })
+        }
     },
     created: function() { // when site is done loading, run these functions
         this.getReceivingSites()

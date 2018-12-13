@@ -14,10 +14,11 @@ urlpatterns = [
     path('register/sending-site/record_sending_site', views.record_sending_site, name='record-sending-site'),
     path('view/receiving', views.view_receiving, name='view-receiving'),
     path('view/sending', views.view_sending, name='view-sending'),
-    path('sending/view', views.view_sending_sites, name='view_sending_sites'),
-    path('receiving/view', views.view_receiving_sites, name='view_receiving_sites'),
+    path('sending/view', views.view_sending_sites_by_user, name='view_sending_sites_by_user'),
+    path('receiving/view', views.view_receiving_sites_by_user, name='view_receiving_sites_by_user'),
     path('auction/create', views.create_auction, name='create_auction'),
     path('view/sending/details/<int:id>', views.sending_site_details, name='sending_site_details'),
     path('view/receiving/details/<int:id>', views.receiving_site_details, name='receiving_site_details'),
     path('bid/<int:id>', views.view_auction, name='view_auction'),
+    path('view/eligible-sites/<int:id>', views.list_matching_sending_sites, name='list_matching_sending_sites')
 ]
